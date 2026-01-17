@@ -25,9 +25,9 @@ def set_front_left_leg_size(root, front_left_leg_len = 0.9, front_left_ankle_len
     ankle_geom_fromto = f"0.0 0.0 0.0 {front_left_ankle_len} {front_left_ankle_len} 0.0"
     ankle_geom.set('fromto', ankle_geom_fromto)
 
-    foot_geom = find_geom_by_name(root, 'front_left_foot_geom')
-    foot_geom_fromto = f"{front_left_ankle_len} {front_left_ankle_len} 0.0"
-    foot_geom.set('pos', foot_geom_fromto)
+    # foot_geom = find_geom_by_name(root, 'front_left_foot_geom')
+    # foot_geom_fromto = f"{front_left_ankle_len} {front_left_ankle_len} 0.0"
+    # foot_geom.set('pos', foot_geom_fromto)
 
 def set_front_right_leg_size(root, front_left_leg_len = 0.9, front_left_ankle_len = 1.5):
     leg_geom = find_geom_by_name(root, 'front_right_leg_geom')
@@ -42,9 +42,9 @@ def set_front_right_leg_size(root, front_left_leg_len = 0.9, front_left_ankle_le
     ankle_geom_fromto = f"0.0 0.0 0.0 -{front_left_ankle_len} {front_left_ankle_len} 0.0"
     ankle_geom.set('fromto', ankle_geom_fromto)
 
-    foot_geom = find_geom_by_name(root, 'front_right_foot_geom')
-    foot_geom_fromto = f"-{front_left_ankle_len} {front_left_ankle_len} 0.0"
-    foot_geom.set('pos', foot_geom_fromto)
+    # foot_geom = find_geom_by_name(root, 'front_right_foot_geom')
+    # foot_geom_fromto = f"-{front_left_ankle_len} {front_left_ankle_len} 0.0"
+    # foot_geom.set('pos', foot_geom_fromto)
 
 def set_back_left_leg_size(root, back_left_leg_len = 0.7, back_left_ankle_len = 0.3):
     leg_geom = find_geom_by_name(root, 'back_left_leg_geom')
@@ -59,9 +59,9 @@ def set_back_left_leg_size(root, back_left_leg_len = 0.7, back_left_ankle_len = 
     ankle_geom_fromto = f"0.0 0.0 0.0 -{back_left_ankle_len} -{back_left_ankle_len} 0.0"
     ankle_geom.set('fromto', ankle_geom_fromto)
 
-    foot_geom = find_geom_by_name(root, 'back_left_foot_geom')
-    foot_geom_fromto = f"-{back_left_ankle_len} -{back_left_ankle_len} 0.0"
-    foot_geom.set('pos', foot_geom_fromto)
+    # foot_geom = find_geom_by_name(root, 'back_left_foot_geom')
+    # foot_geom_fromto = f"-{back_left_ankle_len} -{back_left_ankle_len} 0.0"
+    # foot_geom.set('pos', foot_geom_fromto)
 
 def set_back_right_leg_size(root, back_right_leg_len = 0.7, back_right_ankle_len = 0.3):
     leg_geom = find_geom_by_name(root, 'back_right_leg_geom')
@@ -76,9 +76,9 @@ def set_back_right_leg_size(root, back_right_leg_len = 0.7, back_right_ankle_len
     ankle_geom_fromto = f"0.0 0.0 0.0 {back_right_ankle_len} -{back_right_ankle_len} 0.0"
     ankle_geom.set('fromto', ankle_geom_fromto)
 
-    foot_geom = find_geom_by_name(root, 'back_right_foot_geom')
-    foot_geom_fromto = f"{back_right_ankle_len} -{back_right_ankle_len} 0.0"
-    foot_geom.set('pos', foot_geom_fromto)
+    # foot_geom = find_geom_by_name(root, 'back_right_foot_geom')
+    # foot_geom_fromto = f"{back_right_ankle_len} -{back_right_ankle_len} 0.0"
+    # foot_geom.set('pos', foot_geom_fromto)
 
 def update_model(root, front_leg_len = 0.9, front_ankle_len = 1.5, back_leg_len = 0.7, back_ankle_len = 0.3):
     set_front_left_leg_size(root, front_leg_len, front_ankle_len)

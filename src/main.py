@@ -39,9 +39,81 @@ def run_scene(model_path):
             v.sync()
 
 if __name__ == "__main__":
-    for front_leg_len, front_ankle_len, back_leg_len, back_ankle_len in params:
-        res_model_path = f"res_model/base_model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+    # for front_leg_len, front_ankle_len, back_leg_len, back_ankle_len in params:
+    #     res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
 
-        generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+    #     generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
 
-    # run_scene("res_model/base_model_0.9_1.5_0.4_0.3.xml")
+    # run_scene("res_model/model_0.9_1.0_0.7_0.3.xml")
+
+    # # 1
+    # front_leg_len = 1
+    # front_ankle_len = 1
+    # back_leg_len = 1
+    # back_ankle_len = 1
+
+    # res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+
+    # generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+
+    # # 2
+    # front_leg_len = 5
+    # front_ankle_len = 2
+    # back_leg_len = 1
+    # back_ankle_len = 1
+
+    # res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+
+    # generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+
+    # # 3
+    # front_leg_len = 2
+    # front_ankle_len = 5
+    # back_leg_len = 1
+    # back_ankle_len = 1
+
+    # res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+
+    # generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+
+    # # 4
+    # front_leg_len = 1
+    # front_ankle_len = 1
+    # back_leg_len = 5
+    # back_ankle_len = 5
+
+    # res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+
+    # generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+
+    # # 5
+    # front_leg_len = 1
+    # front_ankle_len = 1
+    # back_leg_len = 5
+    # back_ankle_len = 2
+
+    # res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+
+    # generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+
+    # # 6
+    # front_leg_len = 1
+    # front_ankle_len = 1
+    # back_leg_len = 2
+    # back_ankle_len = 5
+
+    # res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+
+    # generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+
+    # # 7
+    # front_leg_len = 1
+    # front_ankle_len = 15
+    # back_leg_len = 1
+    # back_ankle_len = 15
+
+    # res_model_path = f"res_model/model_{front_leg_len}_{front_ankle_len}_{back_leg_len}_{back_ankle_len}.xml"
+
+    # generate_model(base_model_path, res_model_path, front_leg_len, front_ankle_len, back_leg_len, back_ankle_len)
+
+    run_scene("res_model/model_1_1_5_2.xml")
