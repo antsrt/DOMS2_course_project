@@ -36,9 +36,18 @@ from legged_gym.envs.base.legged_robot import LeggedRobot
 class Ant2(LeggedRobot):
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
+        self.cot = torch.zeros(self.num_envs, device=self.device)
+        self.cot_sum = torch.zeros(self.num_envs, device=self.device)
 
     def _compute_torques(self, actions):
         torques = super()._compute_torques(actions)
+        
+                # Сохраняем для последующего использования в награде
+        self.instant_power = torch.abs(torques * self.dof_vel)
+        
+        # Суммарная мощность по всем суставам для каждого окружения
+        self.power_total = torch.sum(self.instant_power, dim=1)
+        
         # Debug: print torques and dof_pos for first env
         if not self.headless and self.common_step_counter % 100 == 0:
             print(f"Actions: {actions[0]}")
@@ -48,7 +57,7 @@ class Ant2(LeggedRobot):
         return torques
 
     def compute_observations(self):
-        """ Computes observations for Ant: 27 dims as per informations.py
+        """ Computes observations for Ant: 38 dims with commands (vx, vy, yaw)
         """
         self.obs_buf = torch.cat((
             self.root_states[:, 2:3],  # z position
@@ -56,6 +65,7 @@ class Ant2(LeggedRobot):
             self.dof_pos,  # 8 joint positions
             self.base_lin_vel,  # x, y, z velocities
             self.base_ang_vel,  # angular velocities
+            self.commands[:, :3],  # vx, vy, yaw command
             self.dof_vel  # 8 joint velocities
         ), dim=-1)
         # add noise if needed
@@ -66,7 +76,7 @@ class Ant2(LeggedRobot):
         """ Check terminations for Ant
         """
         # termination on contact forces on torso
-        self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.penalised_contact_indices, :], dim=-1) > 1., dim=1)
+        self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 1., dim=1)
         # termination on unhealthy (z out of range)
         self.reset_buf |= ~self._is_healthy()
         self.time_out_buf = self.episode_length_buf > self.max_episode_length
@@ -80,18 +90,20 @@ class Ant2(LeggedRobot):
         return is_healthy
 
     def _reward_tracking_lin_vel(self):
-        # reward for forward velocity
-        return self.base_lin_vel[:, 0]
+        # reward for tracking linear velocity command in world frame (x, y)
+        lin_vel_world = self.root_states[:, 7:9]
+        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - lin_vel_world), dim=1)
+        return torch.exp(-lin_vel_error / self.cfg.rewards.tracking_sigma)
 
     def _reward_torques(self):
-        # negative reward for large torques: -0.5 * sum(action^2)
-        return -0.5 * torch.sum(torch.square(self.torques), dim=1)
+        # penalty term for large torques
+        return torch.sum(torch.square(self.torques), dim=1)
 
     def _reward_collision(self):
-        # negative reward for contact forces: 0.5 * 0.001 * sum(clip(force, -1,1)^2)
+        # penalty term for contact forces
         contact_force = torch.norm(self.contact_forces[:, self.penalised_contact_indices, :], dim=-1)
         clipped_force = torch.clamp(contact_force, -1., 1.)
-        return -0.5 * 0.001 * torch.sum(torch.square(clipped_force), dim=1)
+        return 0.5 * 0.001 * torch.sum(torch.square(clipped_force), dim=1)
 
     def _reward_survive(self):
         # reward for surviving each timestep
@@ -103,6 +115,17 @@ class Ant2(LeggedRobot):
         out_of_limits += (self.dof_pos - self.dof_pos_limits[:, 1]).clip(min=0.)
         return torch.sum(out_of_limits, dim=1)
 
+    def _reward_energy(self):
+        # reward = self.gait_cfg.reward.alpha_en * torch.exp(-(torch.sum(abs(self.robot_env.dof_vel) * abs(self.robot_env.torques), dim=1)) / (self.gait_cfg.reward.sigma_en_x * abs(self.robot_env.base_lin_vel[:, 0]) + self.gait_cfg.reward.sigma_en_z * abs(self.robot_env.base_ang_vel[:, 2])))
+        lin_vel = torch.abs(self.root_states[:, 7])
+        ang_vel = torch.abs(self.root_states[:, 12])
+        denom = 400 * lin_vel + 70 * ang_vel
+        reward = torch.exp(-self.power_total / (denom + 1e-6))
+        mg = 200
+        self.cot = self.power_total / (mg * lin_vel + 1e-6)
+        self.cot_sum += self.cot
+        return reward
+    
     def _resample_commands(self, env_ids):
         """ Resample commands for Ant: lin_vel_x, lin_vel_y, ang_vel_yaw, heading
         """
@@ -112,14 +135,29 @@ class Ant2(LeggedRobot):
         self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)
 
     def _reward_tracking_ang_vel(self):
-        # reward for tracking angular velocity (yaw)
-        ang_vel_error = torch.square(self.commands[:, 1] - self.base_ang_vel[:, 2])
+        # reward for tracking angular velocity (yaw) in world frame
+        ang_vel_world = self.root_states[:, 12]
+        ang_vel_error = torch.square(self.commands[:, 2] - ang_vel_world)
         return torch.exp(-ang_vel_error / self.cfg.rewards.tracking_sigma)
+
+    def _reward_smooth_gait(self):
+        # Smoothness reward based on normalized action deltas.
+        delta = self.actions - self.last_actions
+        scaled_delta = delta / 2.0  # policy outputs are typically in [-1, 1]
+        return torch.exp(-(scaled_delta ** 2).sum(dim=1))
+
+    def reset_idx(self, env_ids):
+        if len(env_ids) == 0:
+            return
+        cot_mean = self.cot_sum[env_ids] / torch.clamp(self.episode_length_buf[env_ids].float(), min=1.0)
+        super().reset_idx(env_ids)
+        self.extras["episode"]["cot"] = torch.mean(cot_mean)
+        self.cot_sum[env_ids] = 0.0
 
     def _get_noise_scale_vec(self, cfg):
         """ Sets noise for Ant observations
         """
-        noise_vec = torch.zeros(27, device=self.device)
+        noise_vec = torch.zeros(38, device=self.device)
         self.add_noise = self.cfg.noise.add_noise
         noise_scales = self.cfg.noise.noise_scales
         noise_level = self.cfg.noise.noise_level
@@ -128,11 +166,13 @@ class Ant2(LeggedRobot):
         # quat
         noise_vec[1:5] = 0.  # no noise on orientation?
         # joint pos
-        noise_vec[5:13] = noise_scales.dof_pos * noise_level
+        noise_vec[5:17] = noise_scales.dof_pos * noise_level
         # lin vel
-        noise_vec[13:16] = noise_scales.lin_vel * noise_level
+        noise_vec[17:20] = noise_scales.lin_vel * noise_level
         # ang vel
-        noise_vec[16:19] = noise_scales.ang_vel * noise_level
+        noise_vec[20:23] = noise_scales.ang_vel * noise_level
+        # commands
+        noise_vec[23:26] = 0.
         # joint vel
-        noise_vec[19:27] = noise_scales.dof_vel * noise_level
+        noise_vec[26:38] = noise_scales.dof_vel * noise_level
         return noise_vec

@@ -33,8 +33,8 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class Ant2Cfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         num_envs = 100
-        num_observations = 27
-        num_actions = 8
+        num_observations = 38
+        num_actions = 12
         episode_length_s = 20  # increased episode length for longer training
 
     class terrain( LeggedRobotCfg.terrain ):
@@ -47,9 +47,9 @@ class Ant2Cfg( LeggedRobotCfg ):
     class commands( LeggedRobotCfg.commands ):
         num_commands = 4  # lin_vel_x, lin_vel_y, ang_vel_yaw, heading
         resampling_time = 10.
-        heading_command = True
+        heading_command = False
         class ranges:
-            lin_vel_x = [-0.2, 0.2]  # decreased speed for training
+            lin_vel_x = [0.5, 1.2]  # desired forward speed range
             lin_vel_y = [-0.2, 0.2]  # decreased speed for training
             ang_vel_yaw = [-0.2, 0.2]  # decreased angular speed for training
             heading = [-3.14, 3.14]
@@ -58,12 +58,16 @@ class Ant2Cfg( LeggedRobotCfg ):
         pos = [0.0, 0.0, 0.5]  # start higher
         default_joint_angles = {
             'hip_1': 0.0,
+            'hip_1_pitch': 0.0,
             'ankle_1': 0.0,
             'hip_2': 0.0,
+            'hip_2_pitch': 0.0,
             'ankle_2': 0.0,
             'hip_3': 0.0,
+            'hip_3_pitch': 0.0,
             'ankle_3': 0.0,
             'hip_4': 0.0,
+            'hip_4_pitch': 0.0,
             'ankle_4': 0.0,
         }
 
@@ -80,7 +84,13 @@ class Ant2Cfg( LeggedRobotCfg ):
         dof_pos_limits = [[-1.0, 1.0] for _ in range(8)]
 
     class asset( LeggedRobotCfg.asset ):
-        file = "{LEGGED_GYM_ROOT_DIR}/isaacgym/assets/mjcf/nv_ant.xml"  # assuming mjcf can be used or convert to urdf
+        #file = "{LEGGED_GYM_ROOT_DIR}/isaacgym/assets/mjcf/nv_ant_thigh_long.xml"
+
+        # file = "{LEGGED_GYM_ROOT_DIR}/isaacgym/assets/mjcf/nv_ant_short.xml"
+        file = "{LEGGED_GYM_ROOT_DIR}/isaacgym/assets/mjcf/nv_ant_long.xml"
+        #file = "{LEGGED_GYM_ROOT_DIR}/isaacgym/assets/mjcf/nv_ant_front_short_back_long.xml"
+        #file = "{LEGGED_GYM_ROOT_DIR}/isaacgym/assets/mjcf/nv_ant_front_long_back_short.xml"
+        #file = "{LEGGED_GYM_ROOT_DIR}/isaacgym/assets/mjcf/nv_ant.xml"  # assuming mjcf can be used or convert to urdf
         name = "ant2"
         foot_name = "foot"
         penalize_contacts_on = ["aux_1", "aux_2", "aux_3", "aux_4"]
@@ -100,6 +110,9 @@ class Ant2Cfg( LeggedRobotCfg ):
             survive = 1.0  # reward_survive
             dof_pos_limits = -1.0  # penalty for dof limits
             base_height = -1.0  # increased penalty for base height deviation
+            energy = 1.0
+            action_rate = 0.0  # disabled; using smooth_gait reward
+            smooth_gait = 0.1  # exp reward for smooth actions
 
 class Ant2CfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
@@ -107,5 +120,5 @@ class Ant2CfgPPO( LeggedRobotCfgPPO ):
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'ant2'
-        max_iterations = 10000  # number of training iterations
+        max_iterations = 1000  # number of training iterations
         save_interval = 50  # save model every 50 iterations
